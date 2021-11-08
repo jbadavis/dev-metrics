@@ -1,14 +1,21 @@
 import { Octokit } from "@octokit/core";
-import differenceInHours from "date-fns/differenceInHours";
-import subDays from "date-fns/subDays";
-import format from "date-fns/format";
-import dotenv from 'dotenv'
+import dotenv from "dotenv";
+import {
+  differenceInHours,
+  format,
+  isFriday,
+  previousFriday,
+  previousMonday,
+  subDays,
+} from "date-fns";
 
-dotenv.config()
+dotenv.config();
 
 const teamName = process.env.TEAM_NAME ?? "";
 const owner = process.env.OWNER ?? "";
 const repo = process.env.REPO ?? "";
+
+const dateFormat = "yyyy-MM-dd";
 
 const octokit = new Octokit({
   auth: process.env.GITHUB_ACCESS_TOKEN,
@@ -16,9 +23,12 @@ const octokit = new Octokit({
 
 function getDates(): [string, string] {
   const today = new Date();
-  const fiveDaysAgo = subDays(today, 5);
+  const friday = isFriday(today) ? today : previousFriday(today);
 
-  return [format(fiveDaysAgo, "yyyy-MM-dd"), format(today, "yyyy-MM-dd")];
+  return [
+    format(previousMonday(friday), dateFormat),
+    format(friday, dateFormat),
+  ];
 }
 
 async function getTeam(): Promise<string[]> {
